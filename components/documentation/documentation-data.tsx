@@ -1,0 +1,121 @@
+import { FileText, Layers } from "lucide-react"
+
+// Audit logs data
+export const auditLogs = [
+  {
+    id: 1,
+    action: "Zone Created",
+    user: "Admin",
+    details: "Created Zone E (Go Zone)",
+    timestamp: "2025-05-05 14:32:45",
+    category: "Zone Management",
+  },
+  {
+    id: 2,
+    action: "Rover Deployed",
+    user: "Operator",
+    details: "Deployed Rover 3 to Zone B",
+    timestamp: "2025-05-05 13:15:22",
+    category: "Fleet Management",
+  },
+  {
+    id: 3,
+    action: "System Update",
+    user: "System",
+    details: "Firmware updated to v2.3.1",
+    timestamp: "2025-05-05 10:05:19",
+    category: "System",
+  },
+  {
+    id: 4,
+    action: "User Login",
+    user: "Admin",
+    details: "User logged in from 192.168.1.105",
+    timestamp: "2025-05-05 09:32:10",
+    category: "Security",
+  },
+  {
+    id: 5,
+    action: "Zone Deleted",
+    user: "Admin",
+    details: "Deleted Zone F (No-Go Zone)",
+    timestamp: "2025-05-04 16:45:33",
+    category: "Zone Management",
+  },
+  {
+    id: 6,
+    action: "Rover Maintenance",
+    user: "Technician",
+    details: "Scheduled maintenance for Rover 5",
+    timestamp: "2025-05-04 14:22:45",
+    category: "Fleet Management",
+  },
+  {
+    id: 7,
+    action: "Settings Changed",
+    user: "Admin",
+    details: "Changed map refresh rate to 15s",
+    timestamp: "2025-05-04 11:05:17",
+    category: "System",
+  },
+  {
+    id: 8,
+    action: "Backup Created",
+    user: "System",
+    details: "Automatic system backup completed",
+    timestamp: "2025-05-04 02:00:00",
+    category: "System",
+  },
+]
+
+// User guides data
+export const userGuides = [
+  {
+    id: 1,
+    title: "Getting Started",
+    description: "Learn the basics of the Rover Management Dashboard and how to navigate the interface.",
+    icon: FileText,
+    category: "General",
+    lastUpdated: "2025-04-15",
+  },
+  {
+    id: 2,
+    title: "Zone Management",
+    description: "How to create, edit, and manage zones for your autonomous rovers.",
+    icon: Layers,
+    category: "Features",
+    lastUpdated: "2025-05-01",
+  },
+  {
+    id: 3,
+    title: "Fleet Dashboard",
+    description: "Monitoring and controlling your rover fleet effectively.",
+    icon: FileText,
+    category: "Features",
+    lastUpdated: "2025-04-22",
+  },
+  {
+    id: 4,
+    title: "Analytics & Reporting",
+    description: "Interpreting data and generating reports on rover operations.",
+    icon: FileText,
+    category: "Features",
+    lastUpdated: "2025-04-28",
+  },
+  {
+    id: 5,
+    title: "Maintenance Procedures",
+    description: "Regular maintenance tasks to keep your rovers operating optimally.",
+    icon: FileText,
+    category: "Maintenance",
+    lastUpdated: "2025-05-02",
+  },
+  {
+    id: 6,
+    title: "Troubleshooting Guide",
+    description: "Solutions for common issues with rover operations.",
+    icon: FileText,
+    category: "Support",
+    lastUpdated: "2025-04-25",
+  },
+]

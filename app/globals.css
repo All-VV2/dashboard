@@ -1,0 +1,154 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 142.1 76.2% 36.3%;
+    --primary-foreground: 355.7 100% 97.3%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 142.1 76.2% 36.3%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 142.1 70.6% 45.3%;
+    --primary-foreground: 144.9 80.4% 10%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 142.4 71.8% 29.2%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Custom styles for map tiles */
+.map-tiles {
+  filter: grayscale(20%) brightness(105%) contrast(90%);
+}
+
+/* Hide attribution */
+.leaflet-control-attribution {
+  display: none !important;
+}
+
+/* Ensure notifications appear above maps */
+.Toaster {
+  z-index: 10000 !important;
+}
+
+.dropdown-menu-content {
+  z-index: 10000 !important;
+}
+
+/* Add this new rule for notification popups */
+.notification-popup {
+  z-index: 10000 !important;
+  position: relative;
+}
+
+/* Ensure notifications and popups appear above maps */
+.leaflet-popup {
+  z-index: 1000 !important;
+}
+
+.leaflet-tooltip {
+  z-index: 1000 !important;
+}
+
+/* Ensure the Toaster component appears above everything */
+[data-sonner-toaster] {
+  z-index: 10000 !important;
+}
+
+/* Ensure all popups and dropdowns appear above maps */
+.popup-overlay,
+.dropdown-menu,
+.dialog-overlay,
+.notification-popup {
+  z-index: 2000 !important;
+}
+
+/* Fix for Leaflet map container */
+.leaflet-container {
+  z-index: 0;
+}
+
+
+/* Fix for calendar in date range picker */
+.rdp-months {
+  display: flex;
+  justify-content: center;
+}
+
+.rdp-month {
+  margin: 0 1rem;
+}
+
+.rdp-table {
+  width: 100%;
+}
+
+.rdp-head_row,
+.rdp-row {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.rdp-head_cell,
+.rdp-cell {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Fix for fleet card buttons */
+.fleet-card-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.fleet-card-buttons button {
+  flex: 1;
+  min-width: 80px;
+}
