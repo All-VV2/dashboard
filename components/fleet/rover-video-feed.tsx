@@ -180,7 +180,7 @@ export function RoverVideoFeed({ roverId, onClose }: RoverVideoFeedProps) {
     const payload = {
       rover_id: `r${roverId}`,
       command: command,
-      distance: command === "pick" ? 0 : 1,
+      distance: (command === "dispose" || command === "retrieve") ? 0 : 1,
       timestamp: new Date().toISOString(),
     };
 
@@ -214,7 +214,7 @@ export function RoverVideoFeed({ roverId, onClose }: RoverVideoFeedProps) {
       }
       if (key === " ") {
         e.preventDefault();
-        handleCommand("pick");
+        handleCommand("dispose");
         return;
       }
 
@@ -344,12 +344,12 @@ export function RoverVideoFeed({ roverId, onClose }: RoverVideoFeedProps) {
               ←
             </Button>
             <Button
-              variant={currentCommand === "pick" ? "default" : "outline"}
+              variant={currentCommand === "dispose" ? "default" : "outline"}
               size="sm"
-              onClick={() => handleCommand("pick")}
+              onClick={() => handleCommand("dispose")}
               disabled={!isRoverSocketOpen}
             >
-              Pick
+              dispose
             </Button>
             <Button
               variant={currentCommand === "right" ? "default" : "outline"}
