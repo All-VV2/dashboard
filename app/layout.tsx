@@ -18,7 +18,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <Script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js" strategy="beforeInteractive" />
       </head>
       <body>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
