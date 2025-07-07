@@ -5,20 +5,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 
-// --- ADD ICONS FOR ARROWS/SQUARE IF YOU WANT ---
-// import { ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Square } from "lucide-react";
-
 interface RoverVideoFeedProps {
   roverId: number;
   onClose: () => void;
 }
 
 export function RoverVideoFeed({ roverId, onClose }: RoverVideoFeedProps) {
-  const SIGNALING_IP = "localhost";
-  const SIGNALING_PORT = 8088; // rover signaling (for original video)
-  const ANNOTATION_SIGNALING_PORT = 8765; // backend annotation signaling port
-  const roverWsUrl = `ws://${SIGNALING_IP}:${SIGNALING_PORT}`;
-  const annotationWsUrl = `ws://${SIGNALING_IP}:${ANNOTATION_SIGNALING_PORT}/ws`;
+  // Use environment variables
+  const roverWsUrl = process.env.NEXT_PUBLIC_ROVER_WS_URL!;
+  const annotationWsUrl = process.env.NEXT_PUBLIC_ANNOTATION_WS_URL!;
 
   const roverSocketRef = useRef<WebSocket | null>(null);
   const roverPeerRef = useRef<RTCPeerConnection | null>(null);
@@ -26,17 +21,15 @@ export function RoverVideoFeed({ roverId, onClose }: RoverVideoFeedProps) {
 
   const [incomingStream, setIncomingStream] = useState<MediaStream | null>(null);
 
-  // === Annotated Stream ===
   const [frameSendActive, setFrameSendActive] = useState(false);
   const annotationSocketRef = useRef<WebSocket | null>(null);
   const annotationPeerRef = useRef<RTCPeerConnection | null>(null);
   const annotatedRef = useRef<HTMLVideoElement | null>(null);
 
-  // === ADDED: Track connection state for button disables ===
   const [isRoverSocketOpen, setIsRoverSocketOpen] = useState(false);
   const [currentCommand, setCurrentCommand] = useState<string | null>(null);
 
-  // --- Setup: Rover Video WebRTC (main feed) ---
+  // Rover Video WebRTC
   useEffect(() => {
     const ws = new WebSocket(roverWsUrl);
     roverSocketRef.current = ws;
@@ -44,11 +37,11 @@ export function RoverVideoFeed({ roverId, onClose }: RoverVideoFeedProps) {
 
     ws.onopen = () => {
       ws.send(JSON.stringify({ type: "register", role: "frontend" }));
-      setIsRoverSocketOpen(true); // ADDED
+      setIsRoverSocketOpen(true);
     };
 
     ws.onclose = () => {
-      setIsRoverSocketOpen(false); // ADDED
+      setIsRoverSocketOpen(false);
     };
 
     ws.onmessage = async (event) => {
@@ -78,9 +71,7 @@ export function RoverVideoFeed({ roverId, onClose }: RoverVideoFeedProps) {
             }
           };
           pc.ontrack = (event) => {
-            const stream = event.streams && event.streams[0]
-              ? event.streams[0]
-              : new MediaStream([event.track]);
+            const stream = event.streams[0] || new MediaStream([event.track]);
             setIncomingStream(stream);
             if (videoRef.current) {
               videoRef.current.srcObject = stream;
@@ -112,16 +103,17 @@ export function RoverVideoFeed({ roverId, onClose }: RoverVideoFeedProps) {
       }
     };
 
-    ws.onerror = (error) => {};
-    // ws.onclose moved above for state
+    ws.onerror = (error) => {
+      console.error("[Rover WS] Error:", error);
+    };
 
     return () => {
       ws.close();
       roverPeerRef.current?.close();
     };
-  }, []);
+  }, [roverWsUrl]);
 
-  // --- Annotated Stream: Start/Stop WebRTC with backend for annotation ---
+  // Annotated Stream
   useEffect(() => {
     let ws: WebSocket | null = null;
     let pc: RTCPeerConnection | null = null;
@@ -135,7 +127,6 @@ export function RoverVideoFeed({ roverId, onClose }: RoverVideoFeedProps) {
       });
       annotationPeerRef.current = pc;
 
-      // Show annotated video
       pc.ontrack = (event) => {
         if (annotatedRef.current) {
           annotatedRef.current.srcObject = event.streams[0];
@@ -150,7 +141,6 @@ export function RoverVideoFeed({ roverId, onClose }: RoverVideoFeedProps) {
       };
 
       ws.onopen = async () => {
-        // Get the rover video stream as the input
         const inputStream = videoRef.current?.srcObject as MediaStream | null;
         if (!inputStream) {
           alert("No rover video stream available for annotation.");
@@ -158,7 +148,6 @@ export function RoverVideoFeed({ roverId, onClose }: RoverVideoFeedProps) {
         }
         inputStream.getTracks().forEach((track) => pc!.addTrack(track, inputStream));
 
-        // WebRTC offer/answer
         const offer = await pc!.createOffer();
         await pc!.setLocalDescription(offer);
         ws!.send(JSON.stringify({ type: "offer", sdp: offer.sdp }));
@@ -173,26 +162,18 @@ export function RoverVideoFeed({ roverId, onClose }: RoverVideoFeedProps) {
     }
 
     return () => {
-      if (annotationPeerRef.current) {
-        annotationPeerRef.current.close();
-        annotationPeerRef.current = null;
-      }
-      if (annotationSocketRef.current) {
-        annotationSocketRef.current.close();
-        annotationSocketRef.current = null;
-      }
+      annotationPeerRef.current?.close();
+      annotationSocketRef.current?.close();
       if (annotatedRef.current) {
         annotatedRef.current.srcObject = null;
       }
     };
-    // Only run when annotation toggled
-  }, [frameSendActive]);
+  }, [frameSendActive, annotationWsUrl]);
 
   const handleToggleFrameSend = () => {
     setFrameSendActive((prev) => !prev);
   };
 
-  // === ADDED: Command handler and UI for movement/pick/retrieve ===
   const handleCommand = (command: string) => {
     setCurrentCommand(command);
 
@@ -203,7 +184,6 @@ export function RoverVideoFeed({ roverId, onClose }: RoverVideoFeedProps) {
       timestamp: new Date().toISOString(),
     };
 
-    // Send via websocket if open
     if (
       roverSocketRef.current &&
       roverSocketRef.current.readyState === WebSocket.OPEN
@@ -214,87 +194,71 @@ export function RoverVideoFeed({ roverId, onClose }: RoverVideoFeedProps) {
     setTimeout(() => setCurrentCommand(null), 0);
   };
 
-  // === ADDED: Keyboard shortcut support for movement/pick/retrieve ===
   useEffect(() => {
-  let intervalId: NodeJS.Timeout | null = null;
-  let activeKey: string | null = null;
+    let intervalId: NodeJS.Timeout | null = null;
+    let activeKey: string | null = null;
 
-  const continuousKeys = ["w", "a", "s", "d"];
+    const continuousKeys = ["w", "a", "s", "d"];
 
-  const keyDownHandler = (e: KeyboardEvent) => {
-    if (!isRoverSocketOpen || currentCommand !== null) return;
-    const key = e.key.toLowerCase();
+    const keyDownHandler = (e: KeyboardEvent) => {
+      if (!isRoverSocketOpen || currentCommand !== null) return;
+      const key = e.key.toLowerCase();
 
-    // Handle single-fire keys
-    if (key === "p") {
-      handleCommand("stop");
-      return;
-    }
-    if (key === "t") {
-      handleCommand("retrieve");
-      return;
-    }
-    if (key === " ") {
-      e.preventDefault();
-      handleCommand("pick");
-      return;
-    }
+      if (key === "p") {
+        handleCommand("stop");
+        return;
+      }
+      if (key === "t") {
+        handleCommand("retrieve");
+        return;
+      }
+      if (key === " ") {
+        e.preventDefault();
+        handleCommand("pick");
+        return;
+      }
 
-    // Handle continuous keys
-    if (!continuousKeys.includes(key)) return;
+      if (!continuousKeys.includes(key)) return;
+      if (activeKey === key) return;
 
-    // Prevent starting multiple intervals for the same key
-    if (activeKey === key) return;
+      const handleKey = () => {
+        switch (key) {
+          case "w":
+            handleCommand("forward");
+            break;
+          case "a":
+            handleCommand("left");
+            break;
+          case "s":
+            handleCommand("backward");
+            break;
+          case "d":
+            handleCommand("right");
+            break;
+        }
+      };
 
-    const handleKey = () => {
-      switch (key) {
-        case "w":
-          handleCommand("forward");
-          break;
-        case "a":
-          handleCommand("left");
-          break;
-        case "s":
-          handleCommand("backward");
-          break;
-        case "d":
-          handleCommand("right");
-          break;
-        default:
-          break;
+      handleKey();
+      intervalId = setInterval(() => handleKey(), 100);
+      activeKey = key;
+    };
+
+    const keyUpHandler = () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+        intervalId = null;
+        activeKey = null;
       }
     };
 
-    handleKey(); // fire immediately
-
-    intervalId = setInterval(() => {
-      handleKey();
-    }, 100);
-
-    activeKey = key;
-  };
-
-  const keyUpHandler = (e: KeyboardEvent) => {
-    if (intervalId) {
-      clearInterval(intervalId);
-      intervalId = null;
-      activeKey = null;
-    }
-  };
-
-  window.addEventListener("keydown", keyDownHandler);
-  window.addEventListener("keyup", keyUpHandler);
-  return () => {
-    window.removeEventListener("keydown", keyDownHandler);
-    window.removeEventListener("keyup", keyUpHandler);
-    if (intervalId) {
-      clearInterval(intervalId);
-    }
-  };
-}, [isRoverSocketOpen, currentCommand]);
-
-  // === ADDED: Movement/Action Buttons UI ===
-  // Uses a grid with 4 columns for neat layout
+    window.addEventListener("keydown", keyDownHandler);
+    window.addEventListener("keyup", keyUpHandler);
+    return () => {
+      window.removeEventListener("keydown", keyDownHandler);
+      window.removeEventListener("keyup", keyUpHandler);
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [isRoverSocketOpen, currentCommand]);
 
   return (
     <Card className="w-full shadow-lg">
@@ -308,7 +272,6 @@ export function RoverVideoFeed({ roverId, onClose }: RoverVideoFeedProps) {
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="relative bg-black rounded-md aspect-video overflow-hidden">
-          {/* Rover stream */}
           <video
             ref={videoRef}
             className="absolute inset-0 w-full h-full object-cover"
@@ -320,7 +283,6 @@ export function RoverVideoFeed({ roverId, onClose }: RoverVideoFeedProps) {
               display: frameSendActive ? "none" : "block",
             }}
           />
-          {/* Annotated stream */}
           <video
             ref={annotatedRef}
             className="absolute inset-0 w-full h-full object-cover"
@@ -344,18 +306,17 @@ export function RoverVideoFeed({ roverId, onClose }: RoverVideoFeedProps) {
           </div>
         </div>
 
-        {/* === ADDED: Control Buttons === */}
         <div className="pt-4">
           <div className="grid grid-cols-4 gap-2 max-w-[380px] mx-auto">
             <div>
               <Button
-              variant={currentCommand === "stop" ? "default" : "outline"}
-              size="sm"
-              onClick={() => handleCommand("stop")}
-              disabled={!isRoverSocketOpen}
-            >
-              STOP
-            </Button>
+                variant={currentCommand === "stop" ? "default" : "outline"}
+                size="sm"
+                onClick={() => handleCommand("stop")}
+                disabled={!isRoverSocketOpen}
+              >
+                STOP
+              </Button>
             </div>
             <Button
               variant={currentCommand === "forward" ? "default" : "outline"}
@@ -388,9 +349,8 @@ export function RoverVideoFeed({ roverId, onClose }: RoverVideoFeedProps) {
               onClick={() => handleCommand("pick")}
               disabled={!isRoverSocketOpen}
             >
-              pick
+              Pick
             </Button>
-            
             <Button
               variant={currentCommand === "right" ? "default" : "outline"}
               size="sm"
@@ -399,7 +359,7 @@ export function RoverVideoFeed({ roverId, onClose }: RoverVideoFeedProps) {
             >
               →
             </Button>
-            <div></div>
+            <div />
             <div />
             <Button
               variant={currentCommand === "backward" ? "default" : "outline"}
@@ -407,13 +367,12 @@ export function RoverVideoFeed({ roverId, onClose }: RoverVideoFeedProps) {
               onClick={() => handleCommand("backward")}
               disabled={!isRoverSocketOpen}
             >
-               ↓
+              ↓
             </Button>
             <div />
             <div />
           </div>
         </div>
-        {/* === END ADDED === */}
       </CardContent>
     </Card>
   );
