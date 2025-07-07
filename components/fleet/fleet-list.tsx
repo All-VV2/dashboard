@@ -17,9 +17,8 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { RoverVideoFeed } from "./rover-video-feed"
 
-const SIGNALING_IP = "10.0.0.187"
-const SIGNALING_PORT = 8088
-const WS_URL = `ws://${SIGNALING_IP}:${SIGNALING_PORT}`
+const WS_URL = process.env.NEXT_PUBLIC_ROVER_WS_URL!;
+
 
 // Helper function to get state color
 const getStateColor = (state: string) => {
