@@ -270,6 +270,16 @@ export function RoverVideoFeed({ roverId, onClose }: RoverVideoFeedProps) {
           </Button>
         </div>
       </CardHeader>
+      <div className="flex items-center gap-2 px-4 pb-2">
+        <div
+          className={`w-4 h-4 rounded-full border border-green-500 ${
+            frameSendActive ? 'bg-green-500 shadow-lg shadow-green-500/50' : 'bg-gray-800'
+          }`}
+        ></div>
+        <span className="text-sm text-muted-foreground">
+          {frameSendActive ? 'Online' : 'Offline'}
+        </span>
+      </div>
       <CardContent className="space-y-4">
         <div className="relative bg-black rounded-md aspect-video overflow-hidden">
           <video
