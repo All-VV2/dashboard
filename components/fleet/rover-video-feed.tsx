@@ -22,6 +22,7 @@ export function RoverVideoFeed({ roverId, onClose }: RoverVideoFeedProps) {
   const [incomingStream, setIncomingStream] = useState<MediaStream | null>(null);
 
   const [frameSendActive, setFrameSendActive] = useState(false);
+  const [videoOn, setVideoOn] = useState(false);
   const annotationSocketRef = useRef<WebSocket | null>(null);
   const annotationPeerRef = useRef<RTCPeerConnection | null>(null);
   const annotatedRef = useRef<HTMLVideoElement | null>(null);
@@ -110,6 +111,7 @@ export function RoverVideoFeed({ roverId, onClose }: RoverVideoFeedProps) {
     return () => {
       ws.close();
       roverPeerRef.current?.close();
+      setVideoOn(false);
     };
   }, [roverWsUrl]);
 
@@ -131,6 +133,7 @@ export function RoverVideoFeed({ roverId, onClose }: RoverVideoFeedProps) {
         if (annotatedRef.current) {
           annotatedRef.current.srcObject = event.streams[0];
           annotatedRef.current.play();
+          setVideoOn(true);
         }
       };
 
@@ -169,7 +172,7 @@ export function RoverVideoFeed({ roverId, onClose }: RoverVideoFeedProps) {
       }
     };
   }, [frameSendActive, annotationWsUrl]);
-
+  
   const handleToggleFrameSend = () => {
     setFrameSendActive((prev) => !prev);
   };
